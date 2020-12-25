@@ -46,6 +46,27 @@ public class Datasource {
     public static final String QUERY_ALBUMS_BY_ARTISTS_SORT =
             " ORDER BY " + TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME + " COLLATE NOCASE ";
 
+    // Challenge query for artists
+    public static final String QUERY_ARTISTS_START =
+            "SELECT * FROM " + TABLE_ARTISTS;
+
+    // Challenge sort query for artist
+    public static final String QUERY_ARTISTS_SORTING =
+            " ORDER BY " + COLUMN_ARTISTS_NAME + " COLLATE NOCASE ";
+
+    public static final String QUERY_ARTIST_FOR_SONG_START =
+            "SELECT " + TABLE_ARTISTS + "." + COLUMN_ARTISTS_NAME + ", " +
+                    TABLE_ALBUMS + "." + COLUMN_ALBUM_NAME + ", " +
+                    TABLE_SONGS + "." + COLUMN_SONGS_TRACK + " FROM " + TABLE_SONGS +
+                    " INNER JOIN " + TABLE_ALBUMS + " ON " +
+                    TABLE_SONGS + "." + COLUMN_SONGS_ALBUM + " = " + TABLE_ALBUMS + "." + COLUMN_ALBUM_ID +
+                    " INNER JOIN " + TABLE_ARTISTS + " ON " +
+                    TABLE_ALBUMS + "." + COLUMN_ALBUM_ARTISTS + " = " + TABLE_ARTISTS + "." + COLUMN_ARTISTS_ID +
+                    " WHERE " + TABLE_SONGS + "." + COLUMN_SONGS_TITLE + " =\"";
+
+    public static final String QUERY_ARTISTS_FOR_SONG_SORT =
+            " ORDER BY " + TABLE_ARTISTS + "." + COLUMN_ALBUM_NAME + " COLLETE NOCASE ";
+
     private Connection conn;
 
     public boolean open() {
@@ -70,18 +91,18 @@ public class Datasource {
 
     public List<Artist> queryArtists(int sortOrder) {
 
-        StringBuilder sb = new StringBuilder("SELECT * FROM ");
-        sb.append(TABLE_ARTISTS);
+        StringBuilder sb = new StringBuilder(QUERY_ARTISTS_START);
+
         if (sortOrder != ORDER_BY_NONE) {
-            sb.append(" ORDER BY ");
-            sb.append(COLUMN_ARTISTS_NAME);
-            sb.append(" COLLATE NOCASE ");
+            sb.append(QUERY_ARTISTS_SORTING);
             if (sortOrder == ORDER_BY_DESC) {
                 sb.append("DESC");
             } else {
                 sb.append("ASC");
             }
         }
+
+        System.out.println("SQL Statement = " + sb.toString());
 
         try (Statement statement = conn.createStatement();
              ResultSet results = statement.executeQuery(sb.toString())) {
