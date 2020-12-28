@@ -113,7 +113,7 @@ public class Datasource {
     private PreparedStatement querySongInfoView;
 
     private PreparedStatement insertIntoArtists;
-    private PreparedStatement insertInoAlbums;
+    private PreparedStatement insertIntoAlbums;
     private PreparedStatement insertIntoSongs;
 
     private PreparedStatement queryArtist;
@@ -124,7 +124,7 @@ public class Datasource {
             conn = DriverManager.getConnection(CONNECTION_STRING);
             querySongInfoView = conn.prepareStatement(QUERY_VIEW_SONG_INFO_PREP);
             insertIntoArtists = conn.prepareStatement(INSERT_ARTIST, Statement.RETURN_GENERATED_KEYS);
-            insertInoAlbums = conn.prepareStatement(INSERT_ALBUMS, Statement.RETURN_GENERATED_KEYS);
+            insertIntoAlbums = conn.prepareStatement(INSERT_ALBUMS, Statement.RETURN_GENERATED_KEYS);
             insertIntoSongs = conn.prepareStatement(INSERT_SONGS);
             queryArtist = conn.prepareStatement(QUERY_ARTIST);
             queryAlbum = conn.prepareStatement(QUERY_ALBUM);
@@ -147,8 +147,8 @@ public class Datasource {
                 insertIntoArtists.close();
             }
 
-            if (insertInoAlbums != null) {
-                insertInoAlbums.close();
+            if (insertIntoAlbums != null) {
+                insertIntoAlbums.close();
             }
 
             if (insertIntoSongs != null) {
@@ -342,4 +342,89 @@ public class Datasource {
             return null;
         }
     }
+
+    private int insertArtist(String name) throws SQLException {
+
+        queryArtist.setString(1, name);
+        ResultSet results = queryArtist.executeQuery();
+        if (results.next()) {
+            return results.getInt(1);
+        } else {
+            // Insert the artist
+            insertIntoArtists.setString(1, name);
+            int affectedRows = insertIntoArtists.executeUpdate();
+
+            if (affectedRows != 1) {
+                throw new SQLException("Couldn't insert artist!");
+            }
+
+            ResultSet generatedKeys = insertIntoArtists.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Couldn't get _id for artist");
+            }
+        }
+    }
+
+    private int insertAlbum(String name, int artistId) throws SQLException {
+
+        queryAlbum.setString(1, name);
+        ResultSet results = queryAlbum.executeQuery();
+        if (results.next()) {
+            return results.getInt(1);
+        } else {
+            // Insert the album
+
+            insertIntoAlbums.setString(1, name);
+            insertIntoAlbums.setInt(2, artistId);
+            int affectedRows = insertIntoAlbums.executeUpdate();
+
+            if (affectedRows != 1) {
+                throw new SQLException("Couldn't insert album!");
+            }
+
+            ResultSet generatedKeys = insertIntoAlbums.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Couldn't get _id for album");
+            }
+        }
+    }
+    
+//    private int insertSong(String title, String artist, String album, int track){
+//        try {
+//            conn.setAutoCommit(false);
+//
+//            int artistId = insertArtist(artist);
+//            int albumId = insertAlbum(album, artistId);
+//            insertIntoSongs.setInt(1, track);
+//            insertIntoSongs.setString(2, title);
+//            insertIntoSongs.setInt(3, albumId);
+//            int affectedRows = insertIntoSongs.executeUpdate();
+//            if (affectedRows != 1) {
+//                conn.commit();
+//            } else {
+//                throw new SQLException("The song insert failed");
+//            }
+//
+//
+//        } catch (SQLException e) {
+//            System.out.println("Insert song exception: " + e.getMessage());
+//            try {
+//                System.out.println("Performing rollback");
+//                conn.rollback();
+//            } catch (SQLException e2) {
+//                System.out.println("Oh boy! Things are really bad! " + e2.getMessage());
+//            }
+//        } finally {
+//            try {
+//                System.out.println("Resetting default commit behavior");
+//                conn.setAutoCommit(true);
+//            } catch (SQLException e) {
+//                System.out.println("Couldn't reset auto-commit! " + e.getMessage());
+//            }
+//        }
+//    }
 }
